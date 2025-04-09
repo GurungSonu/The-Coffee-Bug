@@ -1,0 +1,190 @@
+const pool = require('../db');
+
+// Create Order from Cart
+const createOrder = (req, res) => {
+    console.log('🔵 Create Order API hit');
+    const { userID } = req.body; // Get userID from request body
+
+    if (!userID) {
+        console.log('🟠 Missing userID');
+        return res.status(400).json({ message: 'UserID is required' });
+    }
+
+    // Step 1: Fetch all cart items for the user
+    const fetchCartQuery = `
+        SELECT ProductID, Quantity, LineTotal
+        FROM MainCartItem
+        WHERE UserID = ?
+    `;
+
+    pool.query(fetchCartQuery, [userID], (err, cartItems) => {
+        if (err) {
+            console.error('Error fetching cart items:', err);
+            return res.status(500).json({ message: 'Database error fetching cart items' });
+        }
+
+        if (cartItems.length === 0) {
+            return res.status(400).json({ message: 'Cart is empty' });
+        }
+
+        // Step 2: Calculate Order Total
+        const orderTotal = cartItems.reduce((sum, item) => sum + item.LineTotal, 0);
+
+        // Step 3: Insert into MainOrder Table
+        const createOrderQuery = `
+            INSERT INTO MainOrders (OrderStatus, OrderTotalAmount, UserID)
+            VALUES ('Pending', ?, ?)
+        `;
+
+        pool.query(createOrderQuery, [orderTotal, userID], (err, orderResult) => {
+            if (err) {
+                console.error('Error creating order:', err);
+                return res.status(500).json({ message: 'Database error creating order' });
+            }
+
+            console.log('🟢 Order Result:', orderResult); // Debugging the result from MainOrders
+            const mainOrderID = orderResult.insertId; // Get the generated Order ID
+
+            // Debug: Log the mainOrderID to ensure it's correct
+            console.log('🟢 mainOrderID:', mainOrderID);
+
+            if (!mainOrderID || mainOrderID === 0) {
+                return res.status(500).json({ message: 'Failed to retrieve OrderID, invalid ID' });
+            }
+
+            // Step 4: Insert Ordered Items
+            const orderedItemsQuery = `
+                INSERT INTO MainOrderItem (OrderedItemQuantity, LineTotal, MainOrderID, ProductID)
+                VALUES ?
+            `;
+
+            const orderedItemsValues = cartItems.map(item => [
+                item.Quantity,
+                item.LineTotal,
+                mainOrderID,
+                item.ProductID
+            ]);
+
+            console.log('🟢 Ordered Items:', orderedItemsValues); // Debugging the orderedItems values
+
+            pool.query(orderedItemsQuery, [orderedItemsValues], (err, orderedItemsResult) => {
+                if (err) {
+                    console.error('Error inserting ordered items:', err);
+                    return res.status(500).json({ message: 'Database error inserting ordered items' });
+                }
+
+                // Step 5: Clear Cart after Order Placement
+                const clearCartQuery = `DELETE FROM MainCartItem WHERE UserID = ?`;
+
+                pool.query(clearCartQuery, [userID], (err, clearResult) => {
+                    if (err) {
+                        console.error('Error clearing cart:', err);
+                        return res.status(500).json({ message: 'Error clearing cart after order' });
+                    }
+
+                    res.status(201).json({
+                        message: 'Order placed successfully',
+                        orderID: mainOrderID,
+                        orderTotal: orderTotal
+                    });
+                });
+            });
+        });
+    });
+};
+
+// Fetch Order History for a User
+const getOrderHistory = (req, res) => {
+    console.log('🔵 Order History API hit');
+    console.log('📌 Received params:', req.params); 
+    const { userID } = req.params;  // Get the userID from the request parameters
+
+    if (!userID) {
+        console.error('Database error:', err);
+        return res.status(400).json({ message: 'UserID is required' });
+    }
+
+    const query = `
+        SELECT o.MainOrderID, o.OrderStatus, o.OrderTotalAmount, o.OrderDate
+        FROM MainOrders o
+        WHERE o.UserID = ?
+        ORDER BY o.OrderDate DESC;
+    `;
+
+    pool.query(query, [userID], (err, results) => {
+        if (err) {
+            console.error('Error fetching order history:', err);
+            return res.status(500).json({ message: 'Database error fetching order history' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'No orders found for this user' });
+        }
+
+        res.json(results); // Return the order history
+    });
+};
+
+const updateOrderStatus = (req, res) => {
+    console.log('🟢 Update Order Status API hit');
+    
+    const { orderID } = req.params; // Get orderID from URL
+    const { newStatus } = req.body; // Get new status from request body
+
+    if (!orderID || !newStatus) {
+        return res.status(400).json({ message: 'OrderID and newStatus are required' });
+    }
+
+    const updateQuery = `
+        UPDATE MainOrders 
+        SET OrderStatus = ? 
+        WHERE MainOrderID = ?
+    `;
+
+    pool.query(updateQuery, [newStatus, orderID], (err, result) => {
+        if (err) {
+            console.error('🔴 Error updating order status:', err);
+            return res.status(500).json({ message: 'Database error updating order status' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        res.status(200).json({ message: 'Order status updated successfully' });
+    });
+};
+
+const getOrderDetails = (req, res) => {
+    const { orderID } = req.params;
+
+    const query = `
+        SELECT oi.OrderedItemQuantity, oi.LineTotal, p.ProductName, p.ProductPrice
+        FROM MainOrderItem oi
+        JOIN Products p ON oi.ProductID = p.ProductID
+        WHERE oi.MainOrderID = ?
+    `;
+
+    pool.query(query, [orderID], (err, results) => {
+        if (err) {
+            console.error('Error fetching order details:', err);
+            return res.status(500).json({ message: 'Database error fetching order details' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        res.json(results);
+    });
+};
+
+
+
+
+module.exports = { 
+    createOrder,
+    getOrderHistory,
+    updateOrderStatus,
+    getOrderDetails,
+ };
