@@ -39,7 +39,7 @@ const AdminSidebar = () => {
           </Link>
         </li>
         <li className="mb-4">
-          <Link to="/users" className="flex items-center gap-2">
+          <Link to="/admin/products" className="flex items-center gap-2">
             <FaUser /> Customers
           </Link>
         </li>

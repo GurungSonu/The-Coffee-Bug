@@ -57,9 +57,76 @@ const getCartItems = (req, res) => {
       res.json(results); // Return the results (cart items)
     });
   };
+
+  // Update product quantity and status in the cart
+const updateCartItem = (req, res) => {
+  const { userID, productID, quantity, productPrice, cartStatus } = req.body;
+
+  // Validate input
+  if (!userID || !productID || !quantity || !productPrice || !cartStatus) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+
+  // Calculate LineTotal: Price * Quantity
+  const lineTotal = productPrice * quantity;
+
+  // Update the cart item in the MainCartItem table
+  pool.query(
+    `UPDATE MainCartItem
+     SET Quantity = ?, LineTotal = ?, cartStatus = ?
+     WHERE UserID = ? AND ProductID = ?`,
+    [quantity, lineTotal, cartStatus, userID, productID],
+    (err, results) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ message: 'Error updating product in cart' });
+      }
+
+      if (results.affectedRows === 0) {
+        return res.status(404).json({ message: 'Product not found in cart' });
+      }
+
+      res.status(200).json({ message: 'Product updated in cart successfully' });
+    }
+  );
+};
+
+  
+  // Delete product from cart
+  const deleteCartItem = (req, res) => {
+    const { userID, productID } = req.params;
+  
+    // Validate input
+    if (!userID || !productID) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+  
+    // Delete the product from the MainCartItem table
+    pool.query(
+      `UPDATE MainCartItem
+       SET cartStatus = 'Deleted'
+       WHERE UserID = ? AND ProductID = ?`,
+      [userID, productID],
+      (err, results) => {
+        if (err) {
+          console.error('Database error:', err);
+          return res.status(500).json({ message: 'Error deleting product from cart' });
+        }
+  
+        if (results.affectedRows === 0) {
+          return res.status(404).json({ message: 'Product not found in cart' });
+        }
+  
+        res.status(200).json({ message: 'Product soft-deleted from cart successfully' });
+      }
+    );
+  };
+  
   
 
 module.exports = { 
     addProductToCart,
-    getCartItems
+    getCartItems,
+    updateCartItem,
+    deleteCartItem,
 };

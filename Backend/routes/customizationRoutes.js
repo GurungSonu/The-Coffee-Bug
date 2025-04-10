@@ -7,6 +7,8 @@ const {  toggleAvailability, deleteIngredient, updateIngredient, createIngredien
 // const { getSizes, getSizesByCategory, createSize, updateSize, deleteSize } = require('../controllers/SizeController');
 
 const { authenticateToken, isAdmin } = require('../controllers/userController');
+const { route } = require('./productRoutes');
+const { addProductToCustomCart, getCustomCartItems, updateCustomCartItem, deleteCustomCartItem } = require('../controllers/customCartController');
 const router = express.Router();
 
 // categories
@@ -32,5 +34,12 @@ router.get('/sizes/ingredient/:ingredientId', getSizesByIngredient);
 router.post('/sizes',authenticateToken, isAdmin, createSize);
 router.put('/sizes/:id',authenticateToken, isAdmin, updateSize);
 router.delete('/sizes/:id', authenticateToken, isAdmin, deleteSize);
+
+
+// for customCart
+router.post('/custom/addToCustomCart', addProductToCustomCart);
+router.get('/custom/getCustomCartItem/:userID', getCustomCartItems);
+route.put('/custom/update', updateCustomCartItem);
+route.delete('/custom/delete/:userID/:customProductID', deleteCustomCartItem);
 
 module.exports = router;
