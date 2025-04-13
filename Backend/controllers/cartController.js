@@ -31,33 +31,68 @@ const addProductToCart = (req, res) => {
 };
 
 // Controller function to fetch cart items for a user
-const getCartItems = (req, res) => {
-    const { userID } = req.params; // Get userID from URL parameters
-    console.log(req.params); 
+// const getCartItems = (req, res) => {
+//     const { userID } = req.params; // Get userID from URL parameters
+//     console.log(req.params); 
   
-    // SQL query to fetch cart items for the specific user
-    const query = `
-      SELECT m.UserID, m.ProductID, m.Quantity, m.LineTotal, p.ProductName, p.ProductPrice, p.Image
-      FROM maincartitem m
-      JOIN products p ON m.ProductID = p.ProductID
-      WHERE m.UserID = ?
-    `;
+//     // SQL query to fetch cart items for the specific user
+//     const query = `
+//       SELECT m.UserID, m.ProductID, m.Quantity, m.LineTotal, p.ProductName, p.ProductPrice, p.Image
+//       FROM maincartitem m
+//       JOIN products p ON m.ProductID = p.ProductID
+//       WHERE m.UserID = ?
+//     `;
   
-    // Query database to get cart items
-    pool.query(query, [userID], (err, results) => {
-      if (err) {
-        console.error('Database error:', err);
-        return res.status(500).json({ message: 'Database error' });
-      }
+//     // Query database to get cart items
+//     pool.query(query, [userID], (err, results) => {
+//       if (err) {
+//         console.error('Database error:', err);
+//         return res.status(500).json({ message: 'Database error' });
+//       }
   
-      if (results.length === 0) {
-        return res.status(404).json({ message: 'No cart items found for this user' });
-      }
+//       if (results.length === 0) {
+//         return res.status(404).json({ message: 'No cart items found for this user' });
+//       }
   
-      res.json(results); // Return the results (cart items)
-    });
-  };
+//       res.json(results); // Return the results (cart items)
+//     });
+//   };
 
+
+const getCombinedCartItems = (req, res) => {
+  const { userID } = req.params;
+
+  const mainCartQuery = `
+    SELECT 'main' AS Source, m.UserID, m.ProductID, m.Quantity, m.LineTotal, p.ProductName, p.ProductPrice, p.Image
+    FROM maincartitem m
+    JOIN products p ON m.ProductID = p.ProductID
+    WHERE m.UserID = ? AND m.CartStatus = 'active'
+  `;
+
+  const customCartQuery = `
+    SELECT 'custom' AS Source, c.UserID, c.CustomProductID, c.Quantity, c.LineTotal, cp.ProductName, NULL AS ProductPrice, NULL AS Image
+    FROM customcartitem c
+    JOIN customproduct cp ON c.CustomProductID = cp.CustomProductID
+    WHERE c.UserID = ? AND c.CartStatus = 'active'
+  `;
+
+  pool.query(mainCartQuery, [userID], (err, mainResults) => {
+    if (err) {
+      console.error('Main cart query error:', err);
+      return res.status(500).json({ message: 'Error fetching main cart items' });
+    }
+
+    pool.query(customCartQuery, [userID], (err, customResults) => {
+      if (err) {
+        console.error('Custom cart query error:', err);
+        return res.status(500).json({ message: 'Error fetching custom cart items' });
+      }
+
+      const combined = [...mainResults, ...customResults];
+      res.status(200).json(combined);
+    });
+  });
+};
   // Update product quantity and status in the cart
 const updateCartItem = (req, res) => {
   const { userID, productID, quantity, productPrice, cartStatus } = req.body;
@@ -123,10 +158,12 @@ const updateCartItem = (req, res) => {
   };
   
   
+  
 
 module.exports = { 
     addProductToCart,
-    getCartItems,
+    // getCartItems,
     updateCartItem,
     deleteCartItem,
+    getCombinedCartItems,
 };

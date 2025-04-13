@@ -8,7 +8,7 @@ const {
   isAdmin } = require('../controllers/productController');
 const { getCategories } = require('../controllers/productController');
 const {addProductToCart, updateCartItem, deleteCartItem} = require('../controllers/cartController');
-const {getCartItems} = require('../controllers/cartController');
+const {getCombinedCartItems} = require('../controllers/cartController');
 const { authenticateToken } = require('../controllers/userController');
 
 const multer = require('multer');
@@ -35,7 +35,7 @@ router.delete('/delete/:id', authenticateToken, isAdmin, deleteProduct);
 
 //routes for mainCart
 router.post('/addToCart', addProductToCart );
-router.get('/cart/:userID', getCartItems);
+router.get('/cart/:userID', getCombinedCartItems);
 router.put('/cart/update', updateCartItem);
 router.delete('/cart/delete/:userID/:productID', deleteCartItem);
 

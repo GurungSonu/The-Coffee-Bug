@@ -9,6 +9,7 @@ const {  toggleAvailability, deleteIngredient, updateIngredient, createIngredien
 const { authenticateToken, isAdmin } = require('../controllers/userController');
 const { route } = require('./productRoutes');
 const { addProductToCustomCart, getCustomCartItems, updateCustomCartItem, deleteCustomCartItem } = require('../controllers/customCartController');
+// const {getAllTemperatures}= require('../controllers/customProductController')
 const router = express.Router();
 
 // categories
@@ -39,7 +40,9 @@ router.delete('/sizes/:id', authenticateToken, isAdmin, deleteSize);
 // for customCart
 router.post('/custom/addToCustomCart', addProductToCustomCart);
 router.get('/custom/getCustomCartItem/:userID', getCustomCartItems);
-route.put('/custom/update', updateCustomCartItem);
-route.delete('/custom/delete/:userID/:customProductID', deleteCustomCartItem);
+router.put('/custom/update', updateCustomCartItem);
+router.delete('/custom/delete/:userID/:customProductID', deleteCustomCartItem);
+
+
 
 module.exports = router;

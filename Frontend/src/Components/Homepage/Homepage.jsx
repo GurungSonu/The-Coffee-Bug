@@ -72,7 +72,7 @@ const Homepage = () => {
 
     //   <CustomerFooter />
 
-      
+
     // </div>
     <div className="font-sans">
       {/* Navbar */}
@@ -109,7 +109,7 @@ const Homepage = () => {
           {["Hot Coffee", "Cold Coffee", "Bakery"].map((label, index) => (
             <div key={index} className="flex flex-col items-center">
               <img
-                src={`../../../public/img/image/-${index + 1}.png`}
+                src={`img/image1/-${index + 1}.png`}
                 className="w-24 h-24 rounded-full border-4 border-orange-200 mb-4"
                 alt={label}
               />
