@@ -7,7 +7,7 @@ const {
   deleteProduct, 
   isAdmin } = require('../controllers/productController');
 const { getCategories } = require('../controllers/productController');
-const {addProductToCart, updateCartItem, deleteCartItem} = require('../controllers/cartController');
+const {addProductToCart, updateCartItem, deleteCartItem, updateCombinedCartItem, deleteCombinedCartItem} = require('../controllers/cartController');
 const {getCombinedCartItems} = require('../controllers/cartController');
 const { authenticateToken } = require('../controllers/userController');
 
@@ -36,7 +36,9 @@ router.delete('/delete/:id', authenticateToken, isAdmin, deleteProduct);
 //routes for mainCart
 router.post('/addToCart', addProductToCart );
 router.get('/cart/:userID', getCombinedCartItems);
-router.put('/cart/update', updateCartItem);
-router.delete('/cart/delete/:userID/:productID', deleteCartItem);
+router.put('/cart/update', updateCombinedCartItem);
+router.delete('/cart/delete/:userID/:itemID/:itemType', deleteCombinedCartItem);
+
+
 
 module.exports = router;

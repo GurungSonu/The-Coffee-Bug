@@ -15,6 +15,7 @@ import MainCart from "./Components/MainCart/MainCart";
 import OrderDetails from "./Components/Order/OrderDetails";
 import ManageIngredient from "./Components/Customization/ManageIngredient";
 import CustomerCustomization from "./Components/CustomerCustomization/CustomerCustomization";
+import OrderList from "./Components/Order/OrderList";
 
 
 
@@ -61,6 +62,7 @@ const App = () => {
           <Route path="/home" element={<Homepage />} />
           <Route path="/mainCart" element={<MainCart/>}/>
           <Route path="/orderDetail" element={<OrderDetails/>}/>
+          <Route path="/orderList" element={<OrderList/>} />
           <Route path="/customization" element={<CustomerCustomization/>}/>
         </Route>
 

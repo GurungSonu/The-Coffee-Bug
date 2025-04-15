@@ -1,52 +1,56 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import axios from "axios";
 
-const OrderDetails = () => {
-  const { orderID } = useParams();  // Get orderID from URL params
-  const [orderDetails, setOrderDetails] = useState([]);
+const OrderDetail = () => {
+  const { masterOrderID } = useParams();
+  const [details, setDetails] = useState(null);
 
   useEffect(() => {
-    console.log(`Fetching order details for Order ID: ${orderID}`); // Debugging
-  
-    axios.get(`http://localhost:5000/api/orders/orderDetails/${orderID}`)
-      .then(res => {
-        console.log("🟢 Order Details Response:", res.data); // Log response data
-        setOrderDetails(res.data);
-      })
-      .catch(err => {
-        console.error("🔴 Error fetching order details:", err);
-      });
-  }, [orderID]);
-  
+    const fetchDetail = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/order/orders/detail/${masterOrderID}`);
+        setDetails(res.data);
+      } catch (err) {
+        console.error("Failed to fetch order details", err);
+      }
+    };
+    fetchDetail();
+  }, [masterOrderID]);
+
+  if (!details) return <p>Loading...</p>;
 
   return (
-    <div>
-      <h2>Order #{orderID} Details</h2>
-      {orderDetails.length === 0 ? <p>No items found</p> : (
-        <table>
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Quantity</th>
-              <th>Price</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orderDetails.map((item, index) => (
-              <tr key={index}>
-                <td>{item.ProductName}</td>
-                <td>{item.OrderedItemQuantity}</td>
-                <td>${item.ProductPrice}</td>
-                <td>${item.LineTotal}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-4">Order #{details.masterOrderID} Details</h2>
+
+      <h3 className="text-lg font-semibold mb-2">Standard Products</h3>
+      {details.mainItems.length > 0 ? (
+        details.mainItems.map((item, idx) => (
+          <div key={idx} className="mb-2 border-b pb-2">
+            <p>{item.ProductName}</p>
+            <p>Quantity: {item.OrderedItemQuantity}</p>
+            <p>Line Total: Rs {item.LineTotal}</p>
+          </div>
+        ))
+      ) : (
+        <p>No standard items.</p>
+      )}
+
+      <h3 className="text-lg font-semibold mt-4 mb-2">Custom Products</h3>
+      {details.customItems.length > 0 ? (
+        details.customItems.map((item, idx) => (
+          <div key={idx} className="mb-2 border-b pb-2">
+            <p>{item.ProductName}</p>
+            <p>Quantity: {item.Quantity}</p>
+            <p>Subtotal: Rs {item.Subtotal}</p>
+          </div>
+        ))
+      ) : (
+        <p>No custom items.</p>
       )}
     </div>
   );
 };
 
-export default OrderDetails;
+export default OrderDetail;
