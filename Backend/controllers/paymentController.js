@@ -1,40 +1,43 @@
 const axios = require("axios");
 
-const verifyKhaltiPayment = async (req, res) => {
-  const { token, amount, orderId } = req.body;
+const initiateKhaltiPayment = async (req, res) => {
+  const { orderId, amount, user } = req.body;
 
-  if (!token || !amount || !orderId) {
-    return res.status(400).json({ message: "Missing token, amount, or order ID" });
-  }
+  console.log("🛠️ Initiating Khalti Payment with:", {
+    orderId,
+    amount,
+    user
+  });
 
   try {
-    const khaltiResponse = await axios.post(
-      "https://khalti.com/api/v2/payment/verify/",
-      { token, amount },
+    const khaltiRes = await axios.post(
+      "https://dev.khalti.com/api/v2/epayment/initiate/",
+      {
+        return_url: "http://localhost:5173/orderList",
+        website_url: "http://localhost:5173",
+        amount: Math.round(amount * 100),
+        purchase_order_id: `ORD-${orderId}`,
+        purchase_order_name: "CoffeeBug Order",
+        customer_info: {
+          name: user?.name || "Test User",
+          email: user?.email || "test@example.com",
+          phone: user?.phone || "9800000001"
+        }
+      },
       {
         headers: {
-          Authorization: "c90ee672cb4d43b79da7f220c2c2ca1a",
-        },
+          Authorization: "Key c90ee672cb4d43b79da7f220c2c2ca1a", // sandbox secret key
+          "Content-Type": "application/json"
+        }
       }
     );
 
-    if (khaltiResponse.data && khaltiResponse.data.idx) {
-      // ✅ Update payment status in your DB
-      const updateQuery = `UPDATE MasterOrder SET PaymentStatus = 'Paid' WHERE MasterOrderID = ?`;
-      pool.query(updateQuery, [orderId], (err, result) => {
-        if (err) {
-          console.error("❌ Error updating payment status:", err);
-          return res.status(500).json({ message: "Failed to update order status" });
-        }
-        res.status(200).json({ message: "Payment verified and order updated!" });
-      });
-    } else {
-      res.status(400).json({ message: "Invalid payment verification response" });
-    }
+    console.log("✅ Khalti INIT response:", khaltiRes.data);
+    res.status(200).json(khaltiRes.data);
   } catch (err) {
-    console.error("❌ Khalti verify error:", err.response?.data || err.message);
-    res.status(500).json({ message: "Khalti verification failed" });
+    console.error("❌ Khalti INIT Error:", err.response?.data || err.message);
+    res.status(500).json({ message: "Failed to initiate Khalti payment" });
   }
 };
 
-module.exports = { verifyKhaltiPayment };
+module.exports = { initiateKhaltiPayment };

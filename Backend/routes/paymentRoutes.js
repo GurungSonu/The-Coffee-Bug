@@ -1,8 +1,8 @@
 const express = require("express");
-const { verifyKhaltiPayment } = require("../controllers/paymentController");
+const { initiateKhaltiPayment } = require("../controllers/paymentController");
 
 const router = express.Router();
 
-router.post("/verify-payment", verifyKhaltiPayment);
+router.post("/initiate-payment", initiateKhaltiPayment);
 
 module.exports = router;

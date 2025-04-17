@@ -282,26 +282,30 @@ const createCombinedOrder = (req, res) => {
             )
             VALUES (?, ?, 'Pending', NOW(), ?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 MINUTE), ?, ?, ?)
           `;
-
+        
           pool.query(insertMasterQuery, [
             mainOrderID, customOrderID,
             deliveryMethod, paymentMethod, deliveryAddress,
             subTotal, shippingCharge, grandTotal
-          ], (err) => {
+          ], (err, masterResult) => {
             if (err) return res.status(500).json({ message: 'Error inserting master order' });
-
+        
+            const masterOrderID = masterResult.insertId; // ✅ GET IT HERE
+        
             pool.query("DELETE FROM MainCartItem WHERE UserID = ?", [userID], () => {
               pool.query("DELETE FROM CustomCartItem WHERE UserID = ?", [userID], () => {
                 return res.status(201).json({
                   message: 'Order placed',
                   mainOrderID,
                   customOrderID,
+                  masterOrderID,  // ✅ INCLUDE THIS IN RESPONSE
                   grandTotal
                 });
               });
             });
           });
         };
+        
 
         insertMainItems(() => insertCustomOrder());
       });
