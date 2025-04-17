@@ -1,7 +1,8 @@
 const express = require('express');
 const { createCombinedOrder } = require('../controllers/OrderController');
-const { getMasterOrderDetails } = require('../controllers/OrderController');
+// const { getMasterOrderDetails } = require('../controllers/OrderController');
 const { getMasterOrdersByUser } = require('../controllers/OrderController');
+const { getMasterOrderDetails } = require('../controllers/OrderController');
 // const { createOrder, getOrderHistory, updateOrderStatus } = require('../controllers/orderController');
 // const { getOrderDetails } = require('../controllers/OrderController');
 // const { createCombinedOrder } = require('../controllers/OrderController');
@@ -16,5 +17,5 @@ router.post("/orders/checkout", createCombinedOrder); // Make sure this route is
 router.get('/history/:userID', getMasterOrdersByUser);
 
 // Get detailed view of one order
-router.get('/details/:masterOrderID', getMasterOrderDetails);
+router.get("/details/:masterOrderID", getMasterOrderDetails);
 module.exports = router;

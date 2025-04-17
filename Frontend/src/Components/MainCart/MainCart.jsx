@@ -90,23 +90,23 @@ const MainCart = () => {
   const discount = 10;
   const total = subTotal - discount;
 
-  const handleCheckout = async () => {
-    try {
-      const response = await axios.post("http://localhost:5000/api/order/orders/checkout", {
-        userID
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+  // const handleCheckout = async () => {
+  //   try {
+  //     const response = await axios.post("http://localhost:5000/api/order/orders/checkout", {
+  //       userID
+  //     }, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
 
-      toast.success("Order placed successfully!");
-      fetchCartItems(); // Optionally refresh or clear UI
-      console.log("Order response:", response.data);
-      navigate("/orderList"); // If using React Router
-    } catch (error) {
-      console.error("Checkout failed:", error.response?.data || error.message);
-      toast.error("Failed to place order.");
-    }
-  };
+  //     toast.success("Order placed successfully!");
+  //     fetchCartItems(); // Optionally refresh or clear UI
+  //     console.log("Order response:", response.data);
+  //     navigate("/checkout"); // If using React Router
+  //   } catch (error) {
+  //     console.error("Checkout failed:", error.response?.data || error.message);
+  //     toast.error("Failed to place order.");
+  //   }
+  // };
 
 
   //   return (
@@ -155,6 +155,11 @@ const MainCart = () => {
   //     </div>
   //   );
   // };
+
+  const handleCheckout = () => {
+    navigate("/checkout"); // Go to checkout page to collect delivery & payment method
+  };
+  
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 p-6">
