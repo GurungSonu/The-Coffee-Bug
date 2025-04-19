@@ -108,6 +108,10 @@ import CustomerCustomization from "./Components/CustomerCustomization/CustomerCu
 import OrderList from "./Components/Order/OrderList";
 import Checkout from "./Components/MainCart/CheckOut";
 import { toast } from "react-toastify";
+import KhaltiSuccess from "./Components/KhaltiSuccess/KhaltiSuccess";
+import { Home } from "./Components/Homepage/Home";
+import CustomerFooter from "./Components/Footer/CustomerFooter";
+import AdminOrderManager from "./Components/AdminOrder/AdminOrderManager";
 
 
 // 🔐 ProtectedRoute wrapper for customer-only pages
@@ -126,6 +130,7 @@ const Layout = () => {
     <div>
       <CustomerNavbar />
       <Outlet />
+      <CustomerFooter/>
     </div>
   );
 };
@@ -162,7 +167,8 @@ const App = () => {
 
         {/* Public customer-facing pages */}
         <Route element={<Layout />}>
-          <Route path="/" element={<Homepage />} />
+          {/* <Route path="/" element={<Homepage />} /> */}
+          <Route path="/" element={<Home />} />
           <Route path="/user/products" element={<UserProducts />} />
 
           {/* ✅ Protected pages */}
@@ -171,6 +177,7 @@ const App = () => {
           <Route path="/customization" element={<ProtectedRoute><CustomerCustomization /></ProtectedRoute>} />
           <Route path="/orders/:masterOrderID" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/khalti-success" element={<KhaltiSuccess/>}></Route>
         </Route>
 
         {/* Admin-only pages */}
@@ -178,6 +185,8 @@ const App = () => {
         <Route path="/manageIngredient" element={<ManageIngredient />} />
         <Route path="/createProduct" element={<AddProduct />} />
         <Route path="/admin/products" element={<AdminProducts />} />
+        <Route path="/admin/orders" element={<AdminOrderManager/>} />
+        <Route path="/viewUsers" element={<ViewUsers/>} />
         <Route
           path="/users"
           element={isAuthenticated() ? <ViewUsers /> : <Navigate to="/login" />}

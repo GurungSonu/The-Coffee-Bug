@@ -1,280 +1,439 @@
-const pool = require('../db');
+const pool = require("../db");
 
-
+// ✅ Create Combined Order
 // const createCombinedOrder = (req, res) => {
-//   const { userID } = req.body;
-//   if (!userID) return res.status(400).json({ message: 'UserID is required' });
-
-//   console.log("🚀 Starting createCombinedOrder for user:", userID);
-
-//   const fetchMainCartQuery = `SELECT ProductID, Quantity, LineTotal FROM MainCartItem WHERE UserID = ? AND CartStatus = 'active'`;
-//   const fetchCustomCartQuery = `SELECT CustomProductID, Quantity, LineTotal FROM CustomCartItem WHERE UserID = ? AND CartStatus = 'active'`;
-
-//   pool.query(fetchMainCartQuery, [userID], (err, mainCartItems) => {
-//     if (err) return res.status(500).json({ message: 'Error fetching main cart items' });
-
-//     pool.query(fetchCustomCartQuery, [userID], (err, customCartItems) => {
-//       if (err) return res.status(500).json({ message: 'Error fetching custom cart items' });
-
-//       if (mainCartItems.length === 0 && customCartItems.length === 0) {
-//         return res.status(400).json({ message: 'No items in cart to checkout' });
-//       }
-
-//       const mainOrderTotal = mainCartItems.reduce((sum, item) => sum + parseFloat(item.LineTotal), 0);
-//       const customOrderTotal = customCartItems.reduce((sum, item) => sum + parseFloat(item.LineTotal), 0);
-
-//       const insertMainOrder = `
-//         INSERT INTO MainOrders (OrderDate, OrderStatus, OrderTotalAmount, UserID)
-//         VALUES (NOW(), 'Pending', ?, ?)
-//       `;
-
-//       pool.query(insertMainOrder, [mainOrderTotal, userID], (err, mainResult) => {
-//         if (err) return res.status(500).json({ message: 'Error creating main order' });
-
-//         const mainOrderID = mainResult.insertId;
-//         const insertMainOrderItemsQuery = `
-//           INSERT INTO MainOrderItem (OrderedItemQuantity, LineTotal, MainOrderID, ProductID)
-//           VALUES ?
-//         `;
-//         const mainValues = mainCartItems.map(item => [
-//           item.Quantity, item.LineTotal, mainOrderID, item.ProductID
-//         ]);
-
-//         const insertMainOrderItems = (cb) => {
-//           if (mainCartItems.length === 0) return cb();
-//           pool.query(insertMainOrderItemsQuery, [mainValues], (err) => {
-//             if (err) return res.status(500).json({ message: 'Error inserting main order items' });
-//             cb();
-//           });
-//         };
-
-//         const insertCustomOrder = () => {
-//           const insertCustomOrderQuery = `
-//             INSERT INTO CustomOrders (UserID, OrderDate, TotalPrice, Status)
-//             VALUES (?, NOW(), ?, 'Pending')
-//           `;
-//           pool.query(insertCustomOrderQuery, [userID, customOrderTotal], (err, customResult) => {
-//             if (err) return res.status(500).json({ message: 'Error creating custom order' });
-
-//             const customOrderID = customResult.insertId;
-//             const insertCustomOrderItemsQuery = `
-//             INSERT INTO CustomOrderItems (CustomOrderID, CustomProductID, Quantity, Subtotal)
-//             VALUES ?
-//           `;
-          
-//           const customValues = customCartItems.map(item => [
-//             customOrderID, item.CustomProductID, item.Quantity, item.LineTotal // LineTotal maps to Subtotal
-//           ]);
-          
-//             if (customCartItems.length === 0) return finalizeOrder(mainOrderID, customOrderID);
-
-//             console.log("📦 customValues:", customValues);
-
-//             pool.query(insertCustomOrderItemsQuery, [customValues], (err) => {
-//               if (err) {
-//                 console.error("💥 INSERT FAIL:", err.sqlMessage || err.message);
-//                 return res.status(500).json({ message: 'Error inserting custom order items' });
-//               }
-//               finalizeOrder(mainOrderID, customOrderID);
-//             });
-//           });
-//         };
-
-//         const finalizeOrder = (mainOrderID, customOrderID) => {
-//             console.log("🧾 Finalizing Order");
-//   console.log("MainOrderID:", mainOrderID);
-//   console.log("CustomOrderID:", customOrderID);
-//           const insertMasterQuery = `
-//             INSERT INTO MasterOrder (MainOrderID, CustomOrderID, Status, OrderDate)
-//             VALUES (?, ?, 'Pending', NOW())
-//           `;
-//           pool.query(insertMasterQuery, [mainOrderID, customOrderID], (err) => {
-//             if (err) return res.status(500).json({ message: 'Error inserting master order' });
-
-//             const clearMainQuery = `DELETE FROM MainCartItem WHERE UserID = ?`;
-//             const clearCustomQuery = `DELETE FROM CustomCartItem WHERE UserID = ?`;
-
-//             pool.query(clearMainQuery, [userID], (err) => {
-//               if (err) return res.status(500).json({ message: 'Error clearing main cart' });
-
-//               pool.query(clearCustomQuery, [userID], (err) => {
-//                 if (err) return res.status(500).json({ message: 'Error clearing custom cart' });
-
-//                 return res.status(201).json({
-//                   message: 'Order placed successfully',
-//                   mainOrderID,
-//                   customOrderID,
-//                   totalAmount: mainOrderTotal + customOrderTotal
-//                 });
-//               });
-//             });
-//           });
-//         };
-
-//         insertMainOrderItems(() => insertCustomOrder());
-//       });
-//     });
-//   });
-// };
-
-
-
-// const createCombinedOrder = (req, res) => {
-//   const { userID, deliveryMethod, paymentMethod } = req.body;
+//   const { userID, deliveryMethod, paymentMethod, deliveryAddress } = req.body;
 
 //   if (!userID || !deliveryMethod || !paymentMethod) {
-//     return res.status(400).json({ message: 'Missing required fields' });
+//     return res.status(400).json({ message: "Missing required fields" });
 //   }
 
-//   console.log("🚀 Checkout for user:", userID);
+//   const fetchMainCart = `SELECT ProductID, Quantity, LineTotal FROM MainCartItem WHERE UserID = ? AND CartStatus = 'active'`;
+//   const fetchCustomCart = `SELECT CustomProductID, Quantity, LineTotal FROM CustomCartItem WHERE UserID = ? AND CartStatus = 'active'`;
 
-//   const fetchMainCartQuery = `SELECT ProductID, Quantity, LineTotal FROM MainCartItem WHERE UserID = ? AND CartStatus = 'active'`;
-//   const fetchCustomCartQuery = `SELECT CustomProductID, Quantity, LineTotal FROM CustomCartItem WHERE UserID = ? AND CartStatus = 'active'`;
+//   pool.query(fetchMainCart, [userID], (err, mainResults) => {
+//     if (err) return res.status(500).json({ message: "Error fetching main cart" });
 
-//   pool.query(fetchMainCartQuery, [userID], (err, mainCartItems) => {
-//     if (err) return res.status(500).json({ message: 'Error fetching main cart items' });
+//     pool.query(fetchCustomCart, [userID], (err, customResults) => {
+//       if (err) return res.status(500).json({ message: "Error fetching custom cart" });
 
-//     pool.query(fetchCustomCartQuery, [userID], (err, customCartItems) => {
-//       if (err) return res.status(500).json({ message: 'Error fetching custom cart items' });
+//       const mainTotal = mainResults.reduce((sum, item) => sum + parseFloat(item.LineTotal), 0);
+//       const customTotal = customResults.reduce((sum, item) => sum + parseFloat(item.LineTotal), 0);
+//       const subTotal = mainTotal + customTotal;
+//       const shipping = deliveryMethod === "Delivery" ? 100 : 0;
+//       const grandTotal = subTotal + shipping;
 
-//       if (mainCartItems.length === 0 && customCartItems.length === 0) {
-//         return res.status(400).json({ message: 'No items in cart' });
+//       let mainOrderID = null;
+//       let customOrderID = null;
+
+//       const proceedToMasterOrder = () => {
+//         const insertMaster = `
+//           INSERT INTO MasterOrder (
+//             MainOrderID, CustomOrderID, Status, OrderDate,
+//             DeliveryMethod, PaymentMethod, DeliveryAddress,
+//             ExpectedDeliveryDate, SubTotal, ShippingCharge, GrandTotal
+//           )
+//           VALUES (?, ?, 'Pending', NOW(), ?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 MINUTE), ?, ?, ?)
+//         `;
+
+//         pool.query(insertMaster, [
+//           mainOrderID, customOrderID,
+//           deliveryMethod, paymentMethod, deliveryAddress,
+//           subTotal, shipping, grandTotal
+//         ], (err, masterResult) => {
+//           if (err) {
+//             console.error("❌ Error inserting into MasterOrder:", err);
+//             return res.status(500).json({ message: "Error creating master order" });
+//           }
+
+//           const masterOrderID = masterResult.insertId;
+
+//           pool.query(`DELETE FROM MainCartItem WHERE UserID = ?`, [userID]);
+//           pool.query(`DELETE FROM CustomCartItem WHERE UserID = ?`, [userID]);
+
+//           return res.status(200).json({
+//             message: "Order placed successfully",
+//             masterOrderID,
+//             mainOrderID,
+//             customOrderID,
+//             grandTotal
+//           });
+//         });
+//       };
+
+//       const insertCustomIfNeeded = () => {
+//         if (customResults.length === 0) return proceedToMasterOrder();
+
+//         const insertCustomOrder = `INSERT INTO CustomOrders (UserID, OrderDate, TotalPrice, Status) VALUES (?, NOW(), ?, 'Pending')`;
+//         pool.query(insertCustomOrder, [userID, customTotal], (err, customResult) => {
+//           if (err) return res.status(500).json({ message: "Error creating custom order" });
+
+//           customOrderID = customResult.insertId;
+
+//           const customItems = customResults.map(item => [
+//             customOrderID,
+//             item.CustomProductID,
+//             item.Quantity,
+//             item.LineTotal
+//           ]);
+//           const insertCustomItems = `INSERT INTO CustomOrderItems (CustomOrderID, CustomProductID, Quantity, Subtotal) VALUES ?`;
+
+//           pool.query(insertCustomItems, [customItems], (err) => {
+//             if (err) return res.status(500).json({ message: "Error inserting custom items" });
+//             proceedToMasterOrder();
+//           });
+//         });
+//       };
+
+//       if (mainResults.length === 0) {
+//         insertCustomIfNeeded();
+//         return;
 //       }
-
-//       const mainTotal = mainCartItems.reduce((sum, i) => sum + parseFloat(i.LineTotal), 0);
-//       const customTotal = customCartItems.reduce((sum, i) => sum + parseFloat(i.LineTotal), 0);
 
 //       const insertMainOrder = `INSERT INTO MainOrders (OrderDate, OrderStatus, OrderTotalAmount, UserID) VALUES (NOW(), 'Pending', ?, ?)`;
 //       pool.query(insertMainOrder, [mainTotal, userID], (err, mainResult) => {
-//         if (err) return res.status(500).json({ message: 'Error creating main order' });
+//         if (err) return res.status(500).json({ message: "Error creating main order" });
 
-//         const mainOrderID = mainResult.insertId;
-//         const mainItems = mainCartItems.map(i => [i.Quantity, i.LineTotal, mainOrderID, i.ProductID]);
+//         mainOrderID = mainResult.insertId;
 
-//         const insertMainItems = cb => {
-//           if (mainItems.length === 0) return cb();
-//           const q = `INSERT INTO MainOrderItem (OrderedItemQuantity, LineTotal, MainOrderID, ProductID) VALUES ?`;
-//           pool.query(q, [mainItems], err => {
-//             if (err) return res.status(500).json({ message: 'Error inserting main order items' });
-//             cb();
-//           });
-//         };
+//         const mainItems = mainResults.map(item => [
+//           item.Quantity,
+//           item.LineTotal,
+//           mainOrderID,
+//           item.ProductID
+//         ]);
 
-//         const insertCustomOrder = () => {
-//           const q = `INSERT INTO CustomOrders (UserID, OrderDate, TotalPrice, Status) VALUES (?, NOW(), ?, 'Pending')`;
-//           pool.query(q, [userID, customTotal], (err, customResult) => {
-//             if (err) return res.status(500).json({ message: 'Error creating custom order' });
+//         const insertMainItems = `INSERT INTO MainOrderItem (OrderedItemQuantity, LineTotal, MainOrderID, ProductID) VALUES ?`;
 
-//             const customOrderID = customResult.insertId;
-//             const customItems = customCartItems.map(i => [customOrderID, i.CustomProductID, i.Quantity, i.LineTotal]);
-
-//             if (customItems.length === 0) return finalizeOrder(mainOrderID, customOrderID);
-
-//             const insertCustomItemsQuery = `
-//               INSERT INTO CustomOrderItems (CustomOrderID, CustomProductID, Quantity, Subtotal)
-//               VALUES ?
-//             `;
-//             pool.query(insertCustomItemsQuery, [customItems], err => {
-//               if (err) return res.status(500).json({ message: 'Error inserting custom items' });
-//               finalizeOrder(mainOrderID, customOrderID);
-//             });
-//           });
-//         };
-//         console.log("🎯 finalizeOrder called");
-//         const finalizeOrder = (mainOrderID, customOrderID) => {
-//           const expectedDateQuery = "DATE_ADD(NOW(), INTERVAL 30 MINUTE)";
-
-//           console.log("🎯 finalizeOrder called");
-//           console.log("🚚 Delivery:", deliveryMethod, "💳 Payment:", paymentMethod);
-
-//           const insertMasterQuery = `
-//             INSERT INTO MasterOrder (MainOrderID, CustomOrderID, Status, OrderDate, DeliveryMethod, PaymentMethod, DeliveryAddress)
-//             VALUES (?, ?, 'Pending', NOW(), ?, ?, ?, ${expectedDateQuery})
-//           `;
-//           pool.query(insertMasterQuery, [mainOrderID, customOrderID, deliveryMethod, paymentMethod, deliveryAddress], (err) => {
-//             if (err) return res.status(500).json({ message: 'Error inserting master order' });
-
-//             pool.query(`DELETE FROM MainCartItem WHERE UserID = ?`, [userID], () => {
-//               pool.query(`DELETE FROM CustomCartItem WHERE UserID = ?`, [userID], () => {
-//                 return res.status(201).json({
-//                   message: 'Order placed',
-//                   mainOrderID,
-//                   customOrderID,
-//                   totalAmount: mainTotal + customTotal
-//                 });
-//               });
-//             });
-//           });
-//         };
-
-//         insertMainItems(() => insertCustomOrder());
+//         pool.query(insertMainItems, [mainItems], (err) => {
+//           if (err) return res.status(500).json({ message: "Error inserting main items" });
+//           insertCustomIfNeeded();
+//         });
 //       });
 //     });
 //   });
 // };
 
-const createCombinedOrder = (req, res) => {
-  const { userID, deliveryMethod, paymentMethod, deliveryAddress } = req.body;
+// lastcomment
+// const createCombinedOrder = (req, res) => {
+//   const { userID, deliveryMethod, paymentMethod, deliveryAddress, pidx } = req.body;
 
-  if (!userID || !deliveryMethod || !paymentMethod || (deliveryMethod === 'Delivery' && !deliveryAddress)) {
-    return res.status(400).json({ message: 'Missing required fields' });
+//   if (!userID || !deliveryMethod || !paymentMethod) {
+//     return res.status(400).json({ message: "Missing required fields" });
+//   }
+
+//   const proceedWithOrder = () => {
+//     const fetchMainCart = `SELECT ProductID, Quantity, LineTotal FROM MainCartItem WHERE UserID = ? AND CartStatus = 'active'`;
+//     const fetchCustomCart = `SELECT CustomProductID, Quantity, LineTotal FROM CustomCartItem WHERE UserID = ? AND CartStatus = 'active'`;
+
+//     pool.query(fetchMainCart, [userID], (err, mainResults) => {
+//       if (err) return res.status(500).json({ message: "Error fetching main cart" });
+
+//       pool.query(fetchCustomCart, [userID], (err, customResults) => {
+//         if (err) return res.status(500).json({ message: "Error fetching custom cart" });
+
+//         const mainTotal = mainResults.reduce((sum, item) => sum + parseFloat(item.LineTotal), 0);
+//         const customTotal = customResults.reduce((sum, item) => sum + parseFloat(item.LineTotal), 0);
+//         const subTotal = mainTotal + customTotal;
+//         const shipping = deliveryMethod === "Delivery" ? 100 : 0;
+//         const grandTotal = subTotal + shipping;
+
+//         let mainOrderID = null;
+//         let customOrderID = null;
+
+//         const proceedToMasterOrder = () => {
+//           const insertMaster = `
+//             INSERT INTO MasterOrder (
+//               MainOrderID, CustomOrderID, Status, OrderDate,
+//               DeliveryMethod, PaymentMethod, DeliveryAddress,
+//               ExpectedDeliveryDate, SubTotal, ShippingCharge, GrandTotal
+//             )
+//             VALUES (?, ?, 'Pending', NOW(), ?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 MINUTE), ?, ?, ?)
+//           `;
+
+//           pool.query(insertMaster, [
+//             mainOrderID, customOrderID,
+//             deliveryMethod, paymentMethod, deliveryAddress,
+//             subTotal, shipping, grandTotal
+//           ], (err, masterResult) => {
+//             if (err) {
+//               console.error("❌ Error inserting into MasterOrder:", err);
+//               return res.status(500).json({ message: "Error creating master order" });
+//             }
+
+//             const masterOrderID = masterResult.insertId;
+
+//             pool.query(`DELETE FROM MainCartItem WHERE UserID = ?`, [userID]);
+//             pool.query(`DELETE FROM CustomCartItem WHERE UserID = ?`, [userID]);
+
+//             return res.status(200).json({
+//               message: "Order placed successfully",
+//               masterOrderID,
+//               mainOrderID,
+//               customOrderID,
+//               grandTotal
+//             });
+//           });
+//         };
+
+//         const insertCustomIfNeeded = () => {
+//           if (customResults.length === 0) return proceedToMasterOrder();
+
+//           const insertCustomOrder = `INSERT INTO CustomOrders (UserID, OrderDate, TotalPrice, Status) VALUES (?, NOW(), ?, 'Pending')`;
+//           pool.query(insertCustomOrder, [userID, customTotal], (err, customResult) => {
+//             if (err) return res.status(500).json({ message: "Error creating custom order" });
+
+//             customOrderID = customResult.insertId;
+
+//             const customItems = customResults.map(item => [
+//               customOrderID,
+//               item.CustomProductID,
+//               item.Quantity,
+//               item.LineTotal
+//             ]);
+//             const insertCustomItems = `INSERT INTO CustomOrderItems (CustomOrderID, CustomProductID, Quantity, Subtotal) VALUES ?`;
+
+//             pool.query(insertCustomItems, [customItems], (err) => {
+//               if (err) return res.status(500).json({ message: "Error inserting custom items" });
+//               proceedToMasterOrder();
+//             });
+//           });
+//         };
+
+//         if (mainResults.length === 0) {
+//           insertCustomIfNeeded();
+//           return;
+//         }
+
+//         const insertMainOrder = `INSERT INTO MainOrders (OrderDate, OrderStatus, OrderTotalAmount, UserID) VALUES (NOW(), 'Pending', ?, ?)`;
+//         pool.query(insertMainOrder, [mainTotal, userID], (err, mainResult) => {
+//           if (err) return res.status(500).json({ message: "Error creating main order" });
+
+//           mainOrderID = mainResult.insertId;
+
+//           const mainItems = mainResults.map(item => [
+//             item.Quantity,
+//             item.LineTotal,
+//             mainOrderID,
+//             item.ProductID
+//           ]);
+
+//           const insertMainItems = `INSERT INTO MainOrderItem (OrderedItemQuantity, LineTotal, MainOrderID, ProductID) VALUES ?`;
+
+//           pool.query(insertMainItems, [mainItems], (err) => {
+//             if (err) return res.status(500).json({ message: "Error inserting main items" });
+//             insertCustomIfNeeded();
+//           });
+//         });
+//       });
+//     });
+//   };
+
+//   // ✅ Prevent duplicate order for completed Khalti payment
+//   if (paymentMethod === 'Khalti' && pidx) {
+//     const checkQuery = `SELECT * FROM Payment WHERE PaymentDescription = ?`;
+//     pool.query(checkQuery, [pidx], (err, result) => {
+//       if (err) return res.status(500).json({ message: "Error checking payment record" });
+//       if (result.length > 0) {
+//         return res.status(409).json({ message: "Order already created for this payment" });
+//       }
+//       proceedWithOrder();
+//     });
+//   } else {
+//     proceedWithOrder();
+//   }
+// };
+
+ 
+// pleaseee chala na codeee
+// const createCombinedOrder = (req, res) => {
+//   const { userID, deliveryMethod, paymentMethod, deliveryAddress, pidx } = req.body;
+
+//   if (!userID || !deliveryMethod || !paymentMethod) {
+//     return res.status(400).json({ message: "Missing required fields" });
+//   }
+
+//   // ✅ Step 1: Check if order already placed for this pidx (Khalti only)
+//   if (paymentMethod === "Khalti" && pidx) {
+//     const checkQuery = `SELECT * FROM Payment WHERE PaymentDescription = ?`;
+//     pool.query(checkQuery, [pidx], (err, result) => {
+//       if (err) return res.status(500).json({ message: "Error checking for existing payment" });
+
+//       if (result.length > 0) {
+//         console.log("⚠️ Duplicate payment found. Order already exists.");
+//         return res.status(409).json({ message: "Order already placed for this payment." });
+//       }
+
+//       // No duplicate, proceed
+//       proceedWithOrder();
+//     });
+//   } else {
+//     proceedWithOrder();
+//   }
+
+//   // 🛒 Proceed with order creation
+//   function proceedWithOrder() {
+//     const fetchMainCart = `SELECT ProductID, Quantity, LineTotal FROM MainCartItem WHERE UserID = ? AND CartStatus = 'active'`;
+//     const fetchCustomCart = `SELECT CustomProductID, Quantity, LineTotal FROM CustomCartItem WHERE UserID = ? AND CartStatus = 'active'`;
+
+//     pool.query(fetchMainCart, [userID], (err, mainResults) => {
+//       if (err) return res.status(500).json({ message: "Error fetching main cart" });
+
+//       pool.query(fetchCustomCart, [userID], (err, customResults) => {
+//         if (err) return res.status(500).json({ message: "Error fetching custom cart" });
+
+//         const mainTotal = mainResults.reduce((sum, item) => sum + parseFloat(item.LineTotal), 0);
+//         const customTotal = customResults.reduce((sum, item) => sum + parseFloat(item.LineTotal), 0);
+//         const subTotal = mainTotal + customTotal;
+//         const shipping = deliveryMethod === "Delivery" ? 100 : 0;
+//         const grandTotal = subTotal + shipping;
+
+//         let mainOrderID = null;
+//         let customOrderID = null;
+
+//         const proceedToMasterOrder = () => {
+//           const insertMaster = `
+//             INSERT INTO MasterOrder (
+//               MainOrderID, CustomOrderID, Status, OrderDate,
+//               DeliveryMethod, PaymentMethod, DeliveryAddress,
+//               ExpectedDeliveryDate, SubTotal, ShippingCharge, GrandTotal
+//             )
+//             VALUES (?, ?, 'Pending', NOW(), ?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 MINUTE), ?, ?, ?)
+//           `;
+
+//           pool.query(insertMaster, [
+//             mainOrderID, customOrderID,
+//             deliveryMethod, paymentMethod, deliveryAddress,
+//             subTotal, shipping, grandTotal
+//           ], (err, masterResult) => {
+//             if (err) {
+//               console.error("❌ Error inserting into MasterOrder:", err);
+//               return res.status(500).json({ message: "Error creating master order" });
+//             }
+
+//             const masterOrderID = masterResult.insertId;
+
+//             // Clean up cart
+//             pool.query(`DELETE FROM MainCartItem WHERE UserID = ?`, [userID]);
+//             pool.query(`DELETE FROM CustomCartItem WHERE UserID = ?`, [userID]);
+
+//             return res.status(200).json({
+//               message: "Order placed successfully",
+//               masterOrderID,
+//               mainOrderID,
+//               customOrderID,
+//               grandTotal
+//             });
+//           });
+//         };
+
+//         const insertCustomIfNeeded = () => {
+//           if (customResults.length === 0) return proceedToMasterOrder();
+
+//           const insertCustomOrder = `INSERT INTO CustomOrders (UserID, OrderDate, TotalPrice, Status) VALUES (?, NOW(), ?, 'Pending')`;
+//           pool.query(insertCustomOrder, [userID, customTotal], (err, customResult) => {
+//             if (err) return res.status(500).json({ message: "Error creating custom order" });
+
+//             customOrderID = customResult.insertId;
+
+//             const customItems = customResults.map(item => [
+//               customOrderID,
+//               item.CustomProductID,
+//               item.Quantity,
+//               item.LineTotal
+//             ]);
+
+//             const insertCustomItems = `
+//               INSERT INTO CustomOrderItems (CustomOrderID, CustomProductID, Quantity, Subtotal) VALUES ?
+//             `;
+
+//             pool.query(insertCustomItems, [customItems], (err) => {
+//               if (err) return res.status(500).json({ message: "Error inserting custom items" });
+//               proceedToMasterOrder();
+//             });
+//           });
+//         };
+
+//         if (mainResults.length === 0) {
+//           insertCustomIfNeeded();
+//         } else {
+//           const insertMainOrder = `
+//             INSERT INTO MainOrders (OrderDate, OrderStatus, OrderTotalAmount, UserID) VALUES (NOW(), 'Pending', ?, ?)
+//           `;
+//           pool.query(insertMainOrder, [mainTotal, userID], (err, mainResult) => {
+//             if (err) return res.status(500).json({ message: "Error creating main order" });
+
+//             mainOrderID = mainResult.insertId;
+
+//             const mainItems = mainResults.map(item => [
+//               item.Quantity,
+//               item.LineTotal,
+//               mainOrderID,
+//               item.ProductID
+//             ]);
+
+//             const insertMainItems = `
+//               INSERT INTO MainOrderItem (OrderedItemQuantity, LineTotal, MainOrderID, ProductID) VALUES ?
+//             `;
+
+//             pool.query(insertMainItems, [mainItems], (err) => {
+//               if (err) return res.status(500).json({ message: "Error inserting main items" });
+//               insertCustomIfNeeded();
+//             });
+//           });
+//         }
+//       });
+//     });
+//   }
+// };
+
+const createCombinedOrder = (req, res) => {
+  const { userID, deliveryMethod, paymentMethod, deliveryAddress, pidx } = req.body;
+
+  if (!userID || !deliveryMethod || !paymentMethod) {
+    return res.status(400).json({ message: "Missing required fields" });
   }
 
-  const fetchMainCartQuery = "SELECT ProductID, Quantity, LineTotal FROM MainCartItem WHERE UserID = ? AND CartStatus = 'active'";
-  const fetchCustomCartQuery = "SELECT CustomProductID, Quantity, LineTotal FROM CustomCartItem WHERE UserID = ? AND CartStatus = 'active'";
+  // ✅ Step 1: Check if order already placed for this pidx (Khalti only)
+  if (paymentMethod === "Khalti" && pidx) {
+    const checkQuery = `SELECT MasterOrderID FROM Payment WHERE PaymentDescription = ?`;
+    pool.query(checkQuery, [pidx], (err, result) => {
+      if (err) return res.status(500).json({ message: "Error checking for existing payment" });
 
-  pool.query(fetchMainCartQuery, [userID], (err, mainCartItems) => {
-    if (err) return res.status(500).json({ message: 'Error fetching main cart items' });
-
-    pool.query(fetchCustomCartQuery, [userID], (err, customCartItems) => {
-      if (err) return res.status(500).json({ message: 'Error fetching custom cart items' });
-
-      if (mainCartItems.length === 0 && customCartItems.length === 0) {
-        return res.status(400).json({ message: 'No items in cart' });
+      if (result.length > 0) {
+        console.log("⚠️ Duplicate order: already exists for this pidx");
+        return res.status(409).json({ message: "Order already placed for this payment." });
       }
 
-      const mainTotal = mainCartItems.reduce((sum, i) => sum + parseFloat(i.LineTotal), 0);
-      const customTotal = customCartItems.reduce((sum, i) => sum + parseFloat(i.LineTotal), 0);
-      const subTotal = mainTotal + customTotal;
-      const shippingCharge = deliveryMethod === 'Delivery' ? 100 : 0;
-      const grandTotal = subTotal + shippingCharge;
+      // No duplicate, proceed
+      proceedWithOrder();
+    });
+  } else {
+    proceedWithOrder();
+  }
 
-      const insertMainOrder = "INSERT INTO MainOrders (OrderDate, OrderStatus, OrderTotalAmount, UserID) VALUES (NOW(), 'Pending', ?, ?)";
-      pool.query(insertMainOrder, [mainTotal, userID], (err, mainResult) => {
-        if (err) return res.status(500).json({ message: 'Error creating main order' });
+  // 🛒 Proceed with order creation
+  function proceedWithOrder() {
+    const fetchMainCart = `SELECT ProductID, Quantity, LineTotal FROM MainCartItem WHERE UserID = ? AND CartStatus = 'active'`;
+    const fetchCustomCart = `SELECT CustomProductID, Quantity, LineTotal FROM CustomCartItem WHERE UserID = ? AND CartStatus = 'active'`;
 
-        const mainOrderID = mainResult.insertId;
-        const mainItems = mainCartItems.map(i => [i.Quantity, i.LineTotal, mainOrderID, i.ProductID]);
+    pool.query(fetchMainCart, [userID], (err, mainResults) => {
+      if (err) return res.status(500).json({ message: "Error fetching main cart" });
 
-        const insertMainItems = cb => {
-          if (mainItems.length === 0) return cb();
-          const q = "INSERT INTO MainOrderItem (OrderedItemQuantity, LineTotal, MainOrderID, ProductID) VALUES ?";
-          pool.query(q, [mainItems], err => {
-            if (err) return res.status(500).json({ message: 'Error inserting main order items' });
-            cb();
-          });
-        };
+      pool.query(fetchCustomCart, [userID], (err, customResults) => {
+        if (err) return res.status(500).json({ message: "Error fetching custom cart" });
 
-        const insertCustomOrder = () => {
-          const q = "INSERT INTO CustomOrders (UserID, OrderDate, TotalPrice, Status) VALUES (?, NOW(), ?, 'Pending')";
-          pool.query(q, [userID, customTotal], (err, customResult) => {
-            if (err) return res.status(500).json({ message: 'Error creating custom order' });
+        const mainTotal = mainResults.reduce((sum, item) => sum + parseFloat(item.LineTotal), 0);
+        const customTotal = customResults.reduce((sum, item) => sum + parseFloat(item.LineTotal), 0);
+        const subTotal = mainTotal + customTotal;
+        const shipping = deliveryMethod === "Delivery" ? 100 : 0;
+        const grandTotal = subTotal + shipping;
 
-            const customOrderID = customResult.insertId;
-            const customItems = customCartItems.map(i => [customOrderID, i.CustomProductID, i.Quantity, i.LineTotal]);
+        let mainOrderID = null;
+        let customOrderID = null;
 
-            if (customItems.length === 0) return finalizeOrder(mainOrderID, customOrderID);
-
-            const insertCustomItemsQuery = "INSERT INTO CustomOrderItems (CustomOrderID, CustomProductID, Quantity, Subtotal) VALUES ?";
-            pool.query(insertCustomItemsQuery, [customItems], err => {
-              if (err) return res.status(500).json({ message: 'Error inserting custom items' });
-              finalizeOrder(mainOrderID, customOrderID);
-            });
-          });
-        };
-
-        const finalizeOrder = (mainOrderID, customOrderID) => {
-          const insertMasterQuery = `
+        const proceedToMasterOrder = () => {
+          const insertMaster = `
             INSERT INTO MasterOrder (
               MainOrderID, CustomOrderID, Status, OrderDate,
               DeliveryMethod, PaymentMethod, DeliveryAddress,
@@ -282,144 +441,362 @@ const createCombinedOrder = (req, res) => {
             )
             VALUES (?, ?, 'Pending', NOW(), ?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 MINUTE), ?, ?, ?)
           `;
-        
-          pool.query(insertMasterQuery, [
+
+          pool.query(insertMaster, [
             mainOrderID, customOrderID,
             deliveryMethod, paymentMethod, deliveryAddress,
-            subTotal, shippingCharge, grandTotal
+            subTotal, shipping, grandTotal
           ], (err, masterResult) => {
-            if (err) return res.status(500).json({ message: 'Error inserting master order' });
-        
-            const masterOrderID = masterResult.insertId; // ✅ GET IT HERE
-        
-            pool.query("DELETE FROM MainCartItem WHERE UserID = ?", [userID], () => {
-              pool.query("DELETE FROM CustomCartItem WHERE UserID = ?", [userID], () => {
-                return res.status(201).json({
-                  message: 'Order placed',
-                  mainOrderID,
-                  customOrderID,
-                  masterOrderID,  // ✅ INCLUDE THIS IN RESPONSE
-                  grandTotal
-                });
-              });
+            if (err) {
+              console.error("❌ Error inserting into MasterOrder:", err);
+              return res.status(500).json({ message: "Error creating master order" });
+            }
+
+            const masterOrderID = masterResult.insertId;
+
+            // Clean up cart
+            pool.query(`DELETE FROM MainCartItem WHERE UserID = ?`, [userID]);
+            pool.query(`DELETE FROM CustomCartItem WHERE UserID = ?`, [userID]);
+
+            return res.status(200).json({
+              message: "Order placed successfully",
+              masterOrderID,
+              mainOrderID,
+              customOrderID,
+              grandTotal
             });
           });
         };
-        
 
-        insertMainItems(() => insertCustomOrder());
+        const insertCustomIfNeeded = () => {
+          if (customResults.length === 0) return proceedToMasterOrder();
+
+          const insertCustomOrder = `INSERT INTO CustomOrders (UserID, OrderDate, TotalPrice, Status) VALUES (?, NOW(), ?, 'Pending')`;
+          pool.query(insertCustomOrder, [userID, customTotal], (err, customResult) => {
+            if (err) return res.status(500).json({ message: "Error creating custom order" });
+
+            customOrderID = customResult.insertId;
+
+            const customItems = customResults.map(item => [
+              customOrderID,
+              item.CustomProductID,
+              item.Quantity,
+              item.LineTotal
+            ]);
+
+            const insertCustomItems = `
+              INSERT INTO CustomOrderItems (CustomOrderID, CustomProductID, Quantity, Subtotal) VALUES ?
+            `;
+
+            pool.query(insertCustomItems, [customItems], (err) => {
+              if (err) return res.status(500).json({ message: "Error inserting custom items" });
+              proceedToMasterOrder();
+            });
+          });
+        };
+
+        if (mainResults.length === 0) {
+          insertCustomIfNeeded();
+        } else {
+          const insertMainOrder = `
+            INSERT INTO MainOrders (OrderDate, OrderStatus, OrderTotalAmount, UserID)
+            VALUES (NOW(), 'Pending', ?, ?)
+          `;
+          pool.query(insertMainOrder, [mainTotal, userID], (err, mainResult) => {
+            if (err) return res.status(500).json({ message: "Error creating main order" });
+
+            mainOrderID = mainResult.insertId;
+
+            const mainItems = mainResults.map(item => [
+              item.Quantity,
+              item.LineTotal,
+              mainOrderID,
+              item.ProductID
+            ]);
+
+            const insertMainItems = `
+              INSERT INTO MainOrderItem (OrderedItemQuantity, LineTotal, MainOrderID, ProductID)
+              VALUES ?
+            `;
+
+            pool.query(insertMainItems, [mainItems], (err) => {
+              if (err) return res.status(500).json({ message: "Error inserting main items" });
+              insertCustomIfNeeded();
+            });
+          });
+        }
+      });
+    });
+  }
+};
+
+
+ 
+
+// ✅ Get all master orders for a user
+const getMasterOrdersByUser = (req, res) => {
+  const userID = req.params.userID;
+
+  const query = `
+    SELECT 
+      mo.MasterOrderID,
+      mo.Status AS MasterStatus,
+      mo.OrderDate,
+      mo.DeliveryMethod,
+      mo.PaymentMethod,
+      mo.GrandTotal,
+      IFNULL(m.OrderTotalAmount, 0) AS MainTotal,
+      IFNULL(c.TotalPrice, 0) AS CustomTotal
+    FROM MasterOrder mo
+    LEFT JOIN MainOrders m ON mo.MainOrderID = m.MainOrderID
+    LEFT JOIN CustomOrders c ON mo.CustomOrderID = c.CustomOrderID
+    WHERE 
+      (m.UserID = ? OR c.UserID = ?)
+    ORDER BY mo.OrderDate DESC
+  `;
+
+  pool.query(query, [userID, userID], (err, results) => {
+    if (err) {
+      console.error("❌ Error fetching master orders:", err);
+      return res.status(500).json({ message: "Database error fetching orders" });
+    }
+    res.status(200).json(results);
+  });
+};
+
+// ✅ Get details of a single master order
+const getMasterOrderDetails = (req, res) => {
+  const { masterOrderID } = req.params;
+  console.log("🔍 Fetching order details for ID:", masterOrderID);
+  console.log("📌 masterOrderID from URL param:", masterOrderID);
+
+  const getMasterQuery = `
+ SELECT 
+      mo.MasterOrderID, 
+      mo.MainOrderID, 
+      mo.CustomOrderID, 
+      mo.Status, 
+      mo.DeliveryMethod, 
+      mo.PaymentMethod, 
+      mo.DeliveryAddress, 
+      mo.ExpectedDeliveryDate,
+      mo.OrderDate AS orderPlacedAt,
+      mo.PreparingAt,
+      mo.OutForDeliveryAt,
+      mo.DeliveredAt,
+      mo.ReadyForPickupAt,
+      mo.PickedUpAt,
+      p.PaymentStatus
+    FROM MasterOrder mo
+    LEFT JOIN Payment p ON mo.MasterOrderID = p.MasterOrderID
+    WHERE mo.MasterOrderID = ?
+
+  `;
+
+  pool.query(getMasterQuery, [masterOrderID], (err, masterResult) => {
+    // if (err || masterResult.length === 0) {
+    //   return res.status(500).json({ message: "Error fetching master order" });
+    // }
+
+    if (err) {
+      console.error("❌ DB error:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+    if (masterResult.length === 0) {
+      console.warn("⚠️ No order found with ID:", masterOrderID);
+      return res.status(404).json({ message: "Order not found" });
+    }
+    
+
+    const {
+      MainOrderID,
+      CustomOrderID,
+      ...masterDetails
+    } = masterResult[0];
+
+    const mainQuery = `
+      SELECT m.OrderedItemQuantity, m.LineTotal, p.ProductName, p.ProductID
+      FROM MainOrderItem m
+      JOIN Products p ON m.ProductID = p.ProductID
+      WHERE m.MainOrderID = ?
+    `;
+
+    pool.query(mainQuery, [MainOrderID], (err, mainItems) => {
+      if (err) {
+        return res.status(500).json({ message: "Error fetching main order items" });
+      }
+
+      const customQuery = `
+        SELECT coi.Quantity, coi.Subtotal, cp.ProductName
+        FROM CustomOrderItems coi
+        JOIN CustomProduct cp ON coi.CustomProductID = cp.CustomProductID
+        WHERE coi.CustomOrderID = ?
+      `;
+
+      pool.query(customQuery, [CustomOrderID], (err, customItems) => {
+        if (err) {
+          return res.status(500).json({ message: "Error fetching custom order items" });
+        }
+
+        return res.status(200).json({
+          ...masterDetails,
+          mainItems,
+          customItems,
+          
+        });
       });
     });
   });
 };
 
 
+// Admin ko lagi
+// const getAllOrders = (req, res) => {
+//   const query = `
+//     SELECT 
+//   mo.MasterOrderID,
+//   mo.Status,
+//   mo.OrderDate,
+//   mo.DeliveryMethod,
+//   mo.PaymentMethod,
+//   mo.DeliveryAddress,
+//   mo.ExpectedDeliveryDate,
+//   mo.GrandTotal,
+//   CONCAT(u.FirstName, ' ', u.LastName) AS CustomerName,
+//   u.Email
+// FROM MasterOrder mo
+// LEFT JOIN MainOrders m ON mo.MainOrderID = m.MainOrderID
+// LEFT JOIN Users u ON m.UserID = u.UserID
+// ORDER BY mo.OrderDate DESC;
 
-// ✅ Get all master orders for a user
-const getMasterOrdersByUser = (req, res) => {
-    const { userID } = req.params;
-  
-    const query = `
-  SELECT 
-    mo.MasterOrderID, 
-    mo.Status AS MasterStatus, 
-    mo.OrderDate,
-    mo.DeliveryMethod,
-    mo.PaymentMethod,
-    m.OrderTotalAmount AS MainTotal,
-    c.TotalPrice AS CustomTotal
-  FROM MasterOrder mo
-  LEFT JOIN MainOrders m ON mo.MainOrderID = m.MainOrderID
-  LEFT JOIN CustomOrders c ON mo.CustomOrderID = c.CustomOrderID
-  WHERE m.UserID = ? OR c.UserID = ?
-  ORDER BY mo.OrderDate DESC
-`;
+//   `;
 
-  
-    pool.query(query, [userID, userID], (err, results) => {
-      if (err) {
-        console.error("Error fetching master orders:", err);
-        return res.status(500).json({ message: "Database error fetching master orders" });
-      }
-      res.status(200).json(results);
-    });
-  };
-  
-  // ✅ Get details of a single master order (products + custom drinks)
-  const getMasterOrderDetails = (req, res) => {
-    const { masterOrderID } = req.params;
-  
-    const getMasterQuery = `
-      SELECT 
-        MasterOrderID, 
-        MainOrderID, 
-        CustomOrderID, 
-        Status, 
-        DeliveryMethod, 
-        PaymentMethod, 
-        DeliveryAddress, 
-        ExpectedDeliveryDate 
-      FROM MasterOrder 
-      WHERE MasterOrderID = ?
-    `;
-  
-    pool.query(getMasterQuery, [masterOrderID], (err, masterResult) => {
-      if (err || masterResult.length === 0) {
-        return res.status(500).json({ message: "Error fetching master order" });
-      }
-  
-      const {
-        MainOrderID,
-        CustomOrderID,
-        Status,
-        DeliveryMethod,
-        PaymentMethod,
-        DeliveryAddress,
-        ExpectedDeliveryDate
-      } = masterResult[0];
-  
-      const mainQuery = `
-        SELECT m.OrderedItemQuantity, m.LineTotal, p.ProductName
-        FROM MainOrderItem m
-        JOIN Products p ON m.ProductID = p.ProductID
-        WHERE m.MainOrderID = ?
-      `;
-  
-      pool.query(mainQuery, [MainOrderID], (err, mainItems) => {
-        if (err) {
-          return res.status(500).json({ message: 'Error fetching main order items' });
-        }
-  
-        const customQuery = `
-          SELECT coi.Quantity, coi.Subtotal, cp.ProductName
-          FROM CustomOrderItems coi
-          JOIN CustomProduct cp ON coi.CustomProductID = cp.CustomProductID
-          WHERE coi.CustomOrderID = ?
-        `;
-  
-        pool.query(customQuery, [CustomOrderID], (err, customItems) => {
-          if (err) {
-            return res.status(500).json({ message: 'Error fetching custom order items' });
-          }
-  
-          return res.status(200).json({
-            status: Status,
-            deliveryMethod: DeliveryMethod,
-            paymentMethod: PaymentMethod,
-            deliveryAddress: DeliveryAddress,
-            expectedDeliveryDate: ExpectedDeliveryDate,
-            mainItems,
-            customItems
-          });
-        });
-      });
-    });
-  };
-  
-  
+//   pool.query(query, (err, results) => {
+//     if (err) {
+//       console.error("❌ Error fetching orders:", err);
+//       return res.status(500).json({ message: "Database error" });
+//     }
+//     res.status(200).json(results);
+//   });
+// };
 
-module.exports = { 
-    createCombinedOrder,
-    getMasterOrdersByUser,
-    getMasterOrderDetails,
- };
+const getAllOrders = (req, res) => {
+  const query = `
+    SELECT 
+      mo.MasterOrderID,
+      mo.Status,
+      mo.OrderDate,
+      mo.DeliveryMethod,
+      mo.PaymentMethod,
+      mo.DeliveryAddress,
+      mo.ExpectedDeliveryDate,
+      mo.GrandTotal,
+      CONCAT(u.FirstName, ' ', u.LastName) AS CustomerName,
+      u.Email,
+      u.PhoneNumber,
+      -- Standard products
+      GROUP_CONCAT(DISTINCT CONCAT(p.ProductName, ' x', moi.OrderedItemQuantity) SEPARATOR ', ') AS StandardItems,
+      -- Custom products with temperature
+      GROUP_CONCAT(DISTINCT CONCAT(cp.ProductName, ' (', t.TemperatureName, ')') SEPARATOR ', ') AS CustomProducts,
+      -- Custom product ingredients with size and quantity
+      GROUP_CONCAT(DISTINCT CONCAT(i.IngredientName, ' (', s.Unit, ' x', cpd.Quantity, ')') SEPARATOR ', ') AS CustomIngredients
+    FROM MasterOrder mo
+    LEFT JOIN MainOrders m ON mo.MainOrderID = m.MainOrderID
+    LEFT JOIN Users u ON m.UserID = u.UserID
+    LEFT JOIN MainOrderItem moi ON m.MainOrderID = moi.MainOrderID
+    LEFT JOIN Products p ON moi.ProductID = p.ProductID
+    LEFT JOIN CustomOrders co ON mo.CustomOrderID = co.CustomOrderID
+    LEFT JOIN CustomOrderItems coi ON co.CustomOrderID = coi.CustomOrderID
+    LEFT JOIN CustomProduct cp ON coi.CustomProductID = cp.CustomProductID
+    LEFT JOIN TemperatureOption t ON cp.TemperatureID = t.TemperatureID
+    LEFT JOIN CustomProductDetails cpd ON cp.CustomProductID = cpd.CustomProductID
+    LEFT JOIN Ingredient i ON cpd.IngredientID = i.IngredientID
+    LEFT JOIN Size s ON cpd.SizeID = s.SizeID
+    GROUP BY mo.MasterOrderID
+    ORDER BY mo.OrderDate DESC;
+  `;
+
+  pool.query(query, (err, results) => {
+    if (err) {
+      console.error("❌ Error fetching orders:", err);
+      return res.status(500).json({ message: "Database error", error: err });
+    }
+    res.status(200).json(results);
+  });
+};
+
+
+
+
+
+
+// ✅ 2. Update order status
+// const updateOrderStatus = (req, res) => {
+//   const { status } = req.body;
+//   const { masterOrderID } = req.params;
+
+//   const timestampField =
+//   status === 'Preparing' ? 'PreparingAt' :
+//   status === 'Out for Delivery' ? 'OutForDeliveryAt' :
+//   status === 'Delivered' ? 'DeliveredAt' :
+//   status === 'Ready for Pickup' ? 'ReadyForPickupAt' :
+//   status === 'Picked Up' ? 'PickedUpAt' : null;
+
+
+//   const query = timestampField
+//     ? `UPDATE MasterOrder SET Status = ?, ${timestampField} = NOW() WHERE MasterOrderID = ?`
+//     : `UPDATE MasterOrder SET Status = ? WHERE MasterOrderID = ?`;
+
+//   // ✅ Now log AFTER query is declared
+//   console.log("🚀 Update Query:", query);
+//   console.log("📝 Params:", [status, masterOrderID]);
+
+//   pool.query(query, [status, masterOrderID], (err) => {
+//     if (err) {
+//       console.error("❌ Error updating status:", err);
+//       return res.status(500).json({ message: "Error updating status" });
+//     }
+//     res.status(200).json({ message: "Status updated successfully" });
+//   });
+// };
+
+const updateOrderStatus = (req, res) => {
+  const { status } = req.body;
+  const { masterOrderID } = req.params;
+
+  // Add timestamp fields for pickup flow
+  const timestampField = 
+    status === 'Preparing' ? 'PreparingAt' :
+    status === 'Out for Delivery' ? 'OutForDeliveryAt' :
+    status === 'Delivered' ? 'DeliveredAt' :
+    status === 'Ready for Pickup' ? 'ReadyForPickupAt' :
+    status === 'Picked Up' ? 'PickedUpAt' :
+    null;
+
+  const query = timestampField
+    ? `UPDATE MasterOrder SET Status = ?, ${timestampField} = NOW() WHERE MasterOrderID = ?`
+    : `UPDATE MasterOrder SET Status = ? WHERE MasterOrderID = ?`;
+
+  console.log("🚀 Update Query:", query);
+  console.log("📝 Params:", [status, masterOrderID]);
+
+  pool.query(query, [status, masterOrderID], (err) => {
+    if (err) {
+      console.error("❌ Error updating status:", err);
+      return res.status(500).json({ message: "Error updating status" });
+    }
+    res.status(200).json({ message: "Status updated successfully" });
+  });
+};
+
+
+
+
+
+module.exports = {
+  createCombinedOrder,
+  getMasterOrdersByUser,
+  getMasterOrderDetails,
+  getAllOrders,
+  updateOrderStatus,
+};

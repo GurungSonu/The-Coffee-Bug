@@ -109,181 +109,6 @@ const updateOwnUser = (req, res) => {
   );
 };
 
-// Deactivate a user (admin only)
-// const deactivateUser = (req, res) => {
-//   const { id } = req.params;
-
-//   // Ensure the user is an admin
-//   if (req.user.role !== 'Admin') {
-//     return res.status(403).json({ message: 'Permission denied. Admin access required.' });
-//   }
-
-//   // Update user status to 'inactive' (deactivate user)
-//   pool.query(
-//     'UPDATE users SET Status = ? WHERE UserId = ?',
-//     ['inactive', id],  // Setting status to 'inactive'
-//     (err, results) => {
-      
-//       if (err) {
-//         console.error('Database error:', err);
-        
-
-//         return res.status(500).send('Database error');
-//       }
-
-//       if (results.affectedRows === 0) {
-//         return res.status(404).json({ message: 'User not found' });
-//       }
-
-//       res.json({ message: 'User has been deactivated successfully' });
-//     }
-//   );
-// };
-
-// 8 march
-// const deactivateUser = (req, res) => {
-//   const { id } = req.params;
-
-//   if (req.user.role !== 'Admin') {
-//     return res.status(403).json({ message: 'Permission denied. Admin access required.' });
-//   }
-
-//   const userId = parseInt(id, 10); // Ensure ID is a number
-
-//   pool.query('SELECT Status FROM users WHERE UserId = ?', [userId], (err, rows) => {
-//     if (err) {
-//       console.error('Database error:', err);
-//       return res.status(500).send('Database error');
-//     }
-
-//     if (rows.length === 0) {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
-
-//     if (rows[0].Status === 'inactive') {
-//       return res.json({ message: 'User is already inactive' });
-//     }
-
-//     // Proceed to update status
-//     pool.query(
-//       'UPDATE users SET Status = ? WHERE UserId = ?',
-//       ['inactive', userId],
-//       (err, results) => {
-//         if (err) {
-//           console.error('Database error:', err);
-//           return res.status(500).send('Database error');
-//         }
-
-//         res.json({ message: 'User has been deactivated successfully' });
-//       }
-//     );
-//   });
-// };
-
-
-// pool.query('SELECT * FROM users WHERE UserId = ?', [id], (err, results) => {
-//   if (err) {
-//     console.error('Database connection error:', err);
-//     return res.status(500).send('Database error');
-//   }
-//   console.log('User Data:', results);
-// });
-
-// pool.query(
-//   'UPDATE users SET Status = ? WHERE UserId = ?',
-//   ['inactive', parseInt(id)],  // Ensuring id is an integer
-//   (err, results) => { /* ... */ }
-// );
-// console.log('Attempting to deactivate user:', id);
-// pool.query(
-//   'UPDATE users SET Status = ? WHERE UserId = ?',
-//   ['inactive', id],
-//   (err, results) => {
-//     if (err) {
-//       console.error('Database error:', err);
-//       return res.status(500).send('Database error');
-//     }
-//     console.log('Update Results:', results);
-
-//     if (results.affectedRows === 0) {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
-
-//     res.json({ message: 'User has been deactivated successfully' });
-//   }
-// );
-
-
-
-// const deleteUser = (req, res) => {
-//   const { id } = req.params;
-//   console.log('Soft deleting user:', id);
-
-//   const userId = parseInt(id, 10);
-
-//   pool.query('SELECT Status FROM users WHERE UserId = ?', [userId], (err, rows) => {
-//     if (err) {
-//       console.error('Database error:', err);
-//       return res.status(500).send('Database error');
-//     }
-
-//     if (rows.length === 0) {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
-
-//     if (rows[0].Status === 'inactive') {
-//       return res.json({ message: 'User is already inactive' });
-//     }
-
-//   // Soft delete by updating isDeleted column
-//   pool.query('UPDATE users SET isDeleted = 1 WHERE UserId = ?', [id], (err, results) => {
-//     if (err) {
-//       console.error('Database error:', err);
-//       return res.status(500).json({ message: 'Database error' });
-//     }
-//     if (results.affectedRows === 0) {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
-//     res.json({ message: 'User soft deleted successfully' });
-//   });
-// };
-
-// 8 march 
-// const deleteUser = (req, res) => {
-//   const { id } = req.params;
-//   console.log('Soft deleting user:', id);
-
-//   const userId = parseInt(id, 10);
-
-//   pool.query('SELECT Status, isDeleted FROM users WHERE UserId = ?', [userId], (err, rows) => {
-//     if (err) {
-//       console.error('Database error:', err);
-//       return res.status(500).send('Database error');
-//     }
-
-//     if (rows.length === 0) {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
-
-//     if (rows[0].isDeleted === 1) {
-//       return res.json({ message: 'User is already soft deleted' });
-//     }
-
-//     // Soft delete by updating isDeleted column
-//     pool.query('UPDATE users SET isDeleted = 1 WHERE UserId = ?', [userId], (err, results) => {
-//       if (err) {
-//         console.error('Database error:', err);
-//         return res.status(500).json({ message: 'Database error' });
-//       }
-//       if (results.affectedRows === 0) {
-//         return res.status(404).json({ message: 'User not found' });
-//       }
-//       res.json({ message: 'User soft deleted successfully' });
-//     });
-//   });
-// };
-
-
 const updateUserStatus = (req, res) => {
   console.log(userId)
   console.log("Route hit: /updateUserStatus/" + req.params.id);
@@ -358,52 +183,92 @@ const restoreUser = (req, res) => {
   });
 };
 
-
-
-// Create a new user (register)
 const createUser = (req, res) => {
-    const { 
-      firstName, 
-      lastName, 
-      email, 
-      gender, 
-      profilePicture, 
-      phoneNumber, 
-      role, 
-      password, 
-      address, 
-      dateOfBirth 
-    } = req.body;
-  
-    // Check if the required fields are present
-    if (!firstName || !lastName || !email || !gender || !role || !password) {
-      return res.status(400).json({ message: 'FirstName, LastName, Email, Gender, Role, and Password are required' });
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    gender,
+    phoneNumber,
+    address,
+    dateOfBirth,
+  } = req.body;
+
+  const profilePicture = req.file ? req.file.filename : null;
+  const role = "Customer"; // 🔒 force role to Customer
+
+  // Validate required fields
+  if (
+    !firstName ||
+    !lastName ||
+    !email ||
+    !password ||
+    !gender ||
+    !phoneNumber ||
+    !dateOfBirth
+  ) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  // Check for existing email or phone
+  const checkQuery = `SELECT * FROM Users WHERE Email = ? OR PhoneNumber = ?`;
+  pool.query(checkQuery, [email, phoneNumber], (err, results) => {
+    if (err) {
+      console.error("❌ Error checking existing users:", err);
+      return res.status(500).json({ message: "Database error" });
     }
-  
-    // Hash the password before saving
+
+    if (results.length > 0) {
+      return res.status(400).json({
+        message:
+          results[0].Email === email
+            ? "Email already in use"
+            : "Phone number already in use",
+      });
+    }
+
+    // Hash password
     bcrypt.hash(password, 10, (err, hashedPassword) => {
       if (err) {
-        console.error('Password hashing error:', err);
-        return res.status(500).send('Error hashing password');
+        console.error("❌ Error hashing password:", err);
+        return res.status(500).json({ message: "Error hashing password" });
       }
 
-      // Insert user into the database with hashed password
-      pool.query(
-        'INSERT INTO users (FirstName, LastName, Email, Gender, ProfilePicture, PhoneNumber, Role, Password, Address, DateOfBirth) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-        [firstName, lastName, email, gender, profilePicture, phoneNumber, role, hashedPassword, address, dateOfBirth], 
-        (err, results) => {
-          if (err) {
-            console.error('Database error:', err);
-            return res.status(500).send('Database error');
-          }
-          res.status(201).json({
-            message: 'User created successfully',
-            userId: results.insertId,
-          });
+      const insertQuery = `
+        INSERT INTO users 
+        (FirstName, LastName, Email, Password, Gender, ProfilePicture, PhoneNumber, Role, Address, DateOfBirth)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      const values = [
+        firstName,
+        lastName,
+        email,
+        hashedPassword,
+        gender,
+        profilePicture,
+        phoneNumber,
+        role,
+        address,
+        dateOfBirth,
+      ];
+
+      pool.query(insertQuery, values, (err, result) => {
+        if (err) {
+          console.error("❌ Error inserting user:", err);
+          return res.status(500).json({ message: "Database insert error" });
         }
-      );
+
+        res.status(201).json({
+          message: "✅ User registered successfully",
+          userId: result.insertId,
+        });
+      });
     });
+  });
 };
+
 
 // Get a single user by ID
 const getUserById = (req, res) => {
@@ -423,94 +288,60 @@ const getUserById = (req, res) => {
     });
 };
 
-// Login user
-// const loginUser = (req, res) => {
-//     const { email, password } = req.body;
+// const checkEmailOrPhone = (req, res) => {
+//   console.log("✅ check-availability hit", req.query);
+//   const { email, phoneNumber } = req.query;
 
-//     if (!email || !password) {
-//       return res.status(400).json({ message: 'Email and password are required' });
+//   const query = `
+//     SELECT Email, PhoneNumber FROM Users 
+//     WHERE Email = ? OR PhoneNumber = ?
+//   `;
+
+//   pool.query(query, [email, phoneNumber], (err, results) => {
+//     if (err) return res.status(500).json({ message: "DB Error" });
+
+//     if (results.length > 0) {
+//       const existing = results[0];
+//       if (existing.Email === email)
+//         return res.status(409).json({ field: "email", message: "Email already in use" });
+//       if (existing.PhoneNumber === phoneNumber)
+//         return res.status(409).json({ field: "phoneNumber", message: "Phone number already in use" });
 //     }
 
-//     // Find user by email
-//     pool.query('SELECT * FROM users WHERE Email = ?', [email], (err, results) => {
-//       if (err) {
-//         console.error('Database error:', err);
-//         return res.status(500).send('Database error');
-//       }
-
-//       if (results.length === 0) {
-//         return res.status(404).json({ message: 'User not found' });
-//       }
-
-//       const user = results[0];
-
-//       // Compare password with the hashed password in the database
-//       bcrypt.compare(password, user.Password, (err, isMatch) => {
-//         if (err) {
-//           console.error('Password comparison error:', err);
-//           return res.status(500).send('Error comparing password');
-//         }
-
-//         if (!isMatch) {
-//           return res.status(401).json({ message: 'Invalid password' });
-//         }
-
-//         // Create JWT token
-//         const token = jwt.sign(
-//           { userId: user.UserId, email: user.Email, role: user.Role }, // Include the role in the payload
-//           process.env.JWT_SECRET || 'your_secret_key', // Make sure to use a secret key from your env
-//           { expiresIn: '1h' } // Token expiration (1 hour)
-//         );
-
-//         res.json({
-//           message: 'Login successful',
-//           token,
-//         });
-//       });
-//     });
-// };
-// const loginUser = (req, res) => {
-//   const { email, password } = req.body;
-
-//   if (!email || !password) {
-//     return res.status(400).json({ message: 'Email and password are required' });
-//   }
-
-//   pool.query('SELECT * FROM users WHERE Email = ?', [email], (err, results) => {
-//     if (err) {
-//       console.error('Database error:', err);
-//       return res.status(500).json({ message: 'Database error' });
-//     }
-
-//     if (results.length === 0) {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
-
-//     const user = results[0];
-
-//     bcrypt.compare(password, user.Password, (err, isMatch) => {
-//       if (err) {
-//         console.error('Password comparison error:', err);
-//         return res.status(500).json({ message: 'Error comparing password' });
-//       }
-
-//       if (!isMatch) {
-//         return res.status(401).json({ message: 'Invalid password' });
-//       }
-
-//       const token = jwt.sign(
-//         { userId: user.UserId, email: user.Email, role: user.Role },
-//         process.env.JWT_SECRET || 'your_secret_key',
-//         { expiresIn: '1h' }
-//       );
-//       console.log(res)
-//       res.json({
-//         message: 'Login successful! Welcome back.',
-//         token
-//       });
-//     });
+//     res.status(200).json({ available: true });
 //   });
 // };
+
+const checkEmailOrPhone = (req, res) => {
+  const { email, phoneNumber } = req.query;
+  console.log("🔍 Checking availability for:", email, phoneNumber);
+
+  const query = `SELECT Email, PhoneNumber FROM Users WHERE Email = ? OR PhoneNumber = ?`;
+
+  pool.query(query, [email, phoneNumber], (err, results) => {
+    if (err) {
+      console.error("❌ DB Error:", err); // Log exact DB error
+      return res.status(500).json({ message: "Database query error", error: err });
+    }
+
+    console.log("✅ Query results:", results);
+
+    if (results.length > 0) {
+      const existing = results[0];
+      if (existing.Email === email) {
+        return res.status(409).json({ field: "email", message: "Email already in use" });
+      }
+      if (existing.PhoneNumber === phoneNumber) {
+        return res.status(409).json({ field: "phoneNumber", message: "Phone number already in use" });
+      }
+    }
+
+    return res.status(200).json({ available: true });
+  });
+};
+
+
+
 
 const loginUser = (req, res) => {
   const { email, password } = req.body;
@@ -637,7 +468,8 @@ module.exports = {
   isAdmin,           // Expose the isAdmin middleware
   loginAdmin,
   restoreUser,
-  updateUserStatus
+  updateUserStatus,
+  checkEmailOrPhone
   
 
 };

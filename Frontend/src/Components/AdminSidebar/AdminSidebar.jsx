@@ -34,12 +34,12 @@ const AdminSidebar = () => {
           </Link>
         </li>
         <li className="mb-4">
-          <Link to="/orders" className="flex items-center gap-2">
+          <Link to="/admin/orders" className="flex items-center gap-2">
             <FaShoppingCart /> Orders
           </Link>
         </li>
         <li className="mb-4">
-          <Link to="/admin/products" className="flex items-center gap-2">
+          <Link to="/viewUsers" className="flex items-center gap-2">
             <FaUser /> Customers
           </Link>
         </li>
@@ -58,11 +58,11 @@ const AdminSidebar = () => {
             <FaShoppingCart /> Products
           </Link>
         </li>
-        <li className="mb-4">
+        {/* <li className="mb-4">
           <Link to="/custom-products" className="flex items-center gap-2">
             <FaShoppingCart /> Custom Products
           </Link>
-        </li>
+        </li> */}
         <li className="mb-4">
           <Link to="/settings" className="flex items-center gap-2">
             <FaCogs /> Settings

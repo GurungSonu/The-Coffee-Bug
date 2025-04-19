@@ -10,6 +10,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const customizationRoutes =require('./routes/customizationRoutes');
 const customProduct = require('./routes/customProductRoutes')
 const payment = require('./routes/paymentRoutes');
+const review = require('./routes/reviewRoutes')
 const { authenticateToken } = require('./controllers/userController'); // Import authenticateToken
 const cors = require('cors'); // Corrected the import of cors
 
@@ -74,6 +75,9 @@ app.use('/api/customize', authenticateToken, customizationRoutes );
 app.use('/api/order', orderRoutes)
 app.use('/api/customProduct', customProduct )
 app.use('/api/payment', payment);
+app.use('/api/review', review);
+app.use('/uploads', express.static('uploads'));
+
 // app.use('/api/ingredient', authenticateToken, ingredientRoutes);
 // app.use('/api/products', productRoutes);
 

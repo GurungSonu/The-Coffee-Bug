@@ -6,7 +6,7 @@ const { getMasterOrderDetails } = require('../controllers/OrderController');
 // const { createOrder, getOrderHistory, updateOrderStatus } = require('../controllers/orderController');
 // const { getOrderDetails } = require('../controllers/OrderController');
 // const { createCombinedOrder } = require('../controllers/OrderController');
-
+const adminDeliveryController = require('../controllers/OrderController')
 const router = express.Router();
 
 // router.post('/create', createOrder);
@@ -18,4 +18,10 @@ router.get('/history/:userID', getMasterOrdersByUser);
 
 // Get detailed view of one order
 router.get("/details/:masterOrderID", getMasterOrderDetails);
+
+// admin ko lagi
+router.get("/admin/orders", adminDeliveryController.getAllOrders);
+
+// ✅ PUT update order status
+router.put("/admin/orders/:masterOrderID/status", adminDeliveryController.updateOrderStatus);
 module.exports = router;

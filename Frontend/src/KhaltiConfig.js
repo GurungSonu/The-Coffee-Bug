@@ -3,7 +3,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 const getKhaltiConfig = (navigate, orderId) => ({
-  publicKey: "test_public_key_f48d200bfb964e6e8ace8bc1ff7c2c15", // ✅ Sandbox Key
+  publicKey: "test_public_key_f48d200bfb964e6e8ace8bc1ff7c2c15", 
   productIdentity: orderId,
   productName: "Coffee Order",
   productUrl: "http://localhost:5173", // Change for production

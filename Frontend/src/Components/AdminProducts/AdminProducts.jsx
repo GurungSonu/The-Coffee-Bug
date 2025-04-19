@@ -19,8 +19,6 @@ const AdminProducts = () => {
         const parsedData = JSON.parse(authData); // Parse stored JSON
         const token = parsedData.token;
         console.log(token);
-        // const response = await axios.get("http://localhost:5000/api/categories");
-        // const response = await axios.get("http://localhost:5000/api/products/categories");
 
         const response = await axios.get("http://localhost:5000/api/products/allProducts", {
           headers: { Authorization: `Bearer ${token}` }
